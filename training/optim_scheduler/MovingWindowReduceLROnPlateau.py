@@ -15,6 +15,7 @@ class MovingWindowReduceLROnPlateau(torch.optim.lr_scheduler._LRScheduler):
             patience: number of bad epochs before reducing LR
             min_lr: minimum allowed LR
             min_delta: minimum change in the monitored quantity to qualify as an improvement
+            reset_step: fraction of patience to reset on improvement
             verbose: whether to print logs
         """
         self.mode = mode
@@ -67,7 +68,7 @@ class MovingWindowReduceLROnPlateau(torch.optim.lr_scheduler._LRScheduler):
                 for i, group in enumerate(self.optimizer.param_groups):
                     old_lr = group['lr']
                     new_lr = max(old_lr * self.factor, self.min_lr)
-                    if old_lr - new_lr > 1e-8 and self.verbose:
+                    if old_lr - new_lr > 0.0 and self.verbose:
                         print(f"Reduce LR: {old_lr:.2e} → {new_lr:.2e}")
                     group['lr'] = new_lr
                 # reset patience counter

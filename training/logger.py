@@ -36,13 +36,13 @@ class Metrics:
         missing = expected_keys - given_keys
         extra = given_keys - expected_keys
 
-        if missing:
-            raise ValueError(f"Missing keys: {missing}")
+        # if missing:
+        #     raise ValueError(f"Missing keys: {missing}")
         if extra:
             raise ValueError(f"Unexpected keys: {extra}")
 
         # enforce order according to self.columns
-        ordered_row = {col: kwargs[col] for col in self._columns}
+        ordered_row = {col: kwargs[col] if col in kwargs else None for col in self._columns}
 
         self._buffer.append(ordered_row)
 

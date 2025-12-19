@@ -4,11 +4,6 @@ import torch
 from torch.utils.data import DataLoader, Subset, random_split
 import pandas as pd
 import dill
-import re
-import yaml
-from collections import defaultdict
-
-from ..modeling.ModelBase import ModelBase
 from .BsDataset import BsDataset
 from .optim_scheduler import MovingWindowReduceLROnPlateau
 
@@ -222,22 +217,22 @@ def load_dataset(load_dir, batch_size=None, name=None, load_dataset=True, load_t
 
     if load_train_loader:
         train_loader = dill.load(open(os.path.join(load_dir, 'train_loader.dill'), 'rb'))
-        if batch_size is not None:
-            train_loader = DataLoader(train_loader.dataset, batch_size=batch_size, shuffle=True)
+        if batch_size is not None and train_loader is not None:
+            train_loader = DataLoader(train_loader.dataset, batch_size=batch_size if batch_size > 0 else len(train_loader.dataset), shuffle=True)
     else:
         train_loader = None
 
     if load_val_loader:
         val_dataloader = dill.load(open(os.path.join(load_dir, 'val_loader.dill'), 'rb'))
-        if batch_size is not None:
-            val_dataloader = DataLoader(val_dataloader.dataset, batch_size=batch_size, shuffle=False)
+        if batch_size is not None and val_dataloader is not None:
+            val_dataloader = DataLoader(val_dataloader.dataset, batch_size=batch_size if batch_size > 0 else len(val_dataloader.dataset), shuffle=False)
     else:
         val_dataloader = None
 
     if load_test_loader:
         test_dataloader = dill.load(open(os.path.join(load_dir, 'test_loader.dill'), 'rb'))
-        if batch_size is not None:
-            test_dataloader = DataLoader(test_dataloader.dataset, batch_size=batch_size, shuffle=False)
+        if batch_size is not None and test_dataloader is not None:
+            test_dataloader = DataLoader(test_dataloader.dataset, batch_size=batch_size if batch_size > 0 else len(test_dataloader.dataset), shuffle=False)
     else:
         test_dataloader = None
 
@@ -302,13 +297,27 @@ def get_ds(
             test_ds  = Subset(dataset, split_indices.get("test", []))
 
         # Create DataLoaders for each dataset
-        train_dataloader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-        val_dataloader = DataLoader(val_ds, batch_size=batch_size, shuffle=True)
-        test_dataloader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
+        if len(train_ds) > 0:
+            train_dataloader = DataLoader(train_ds, batch_size=batch_size if batch_size > 0 else len(train_ds), shuffle=True)
+        else:
+            train_dataloader = None
+        
+        if len(val_ds) > 0:
+            val_dataloader = DataLoader(val_ds, batch_size=batch_size if batch_size > 0 else len(val_ds), shuffle=True)
+        else:
+            val_dataloader = None
+
+        if len(test_ds) > 0:
+            test_dataloader = DataLoader(test_ds, batch_size=batch_size if batch_size > 0 else len(test_ds), shuffle=False)
+        else:
+            test_dataloader = None
 
         return dataset, train_dataloader, val_dataloader, test_dataloader
     
     elif mode == 'test':
         # Only create a DataLoader for the full dataset
-        test_dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+        if len(dataset) > 0:
+            test_dataloader = DataLoader(dataset, batch_size=batch_size if batch_size > 0 else len(dataset), shuffle=False)
+        else:
+            test_dataloader = None
         return dataset, test_dataloader
