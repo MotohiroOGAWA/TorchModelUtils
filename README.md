@@ -37,12 +37,18 @@ Dictionary-based dataset for flexible data handling:
 
 ## Installation
 
-Clone the repository and install locally:
+Clone the repository and add to your Python path:
 
 ```bash
 git clone https://github.com/MotohiroOGAWA/TorchModelUtils.git
 cd TorchModelUtils
-pip install -e .
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+```
+
+Or install required dependencies:
+
+```bash
+pip install torch pandas pyyaml tensorboard
 ```
 
 ## Quick Start
