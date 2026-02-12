@@ -25,11 +25,22 @@ class ModelBase(nn.Module):
     def __init__(self, ignore_config_keys=None, **kwargs):
         super(ModelBase, self).__init__()
         self._ignore_config_keys = ['self', '_ignore_config_keys', '__class__']
+
         if ignore_config_keys is not None:
             self._ignore_config_keys.extend(ignore_config_keys)
+
         for key, value in kwargs.items():
-            if key not in self._ignore_config_keys:
-                setattr(self, key, value)
+            if key in self._ignore_config_keys:
+                continue
+
+            # --- check if attribute is a property in subclass ---
+            attr = inspect.getattr_static(self.__class__, key, None)
+
+            if isinstance(attr, property):
+                # Skip setting attribute if it is defined as @property
+                continue
+
+            setattr(self, key, value)
 
 
     def forward(self, *args, **kwargs):
@@ -52,9 +63,6 @@ class ModelBase(nn.Module):
 
         # Extract only the required parameters from instance attributes
         config = {key: getattr(self, key) for key in config_keys if hasattr(self, key)}
-        for key in self._ignore_config_keys:
-            if key in constructor_params:
-                config[key] = None
         
         return config
     
